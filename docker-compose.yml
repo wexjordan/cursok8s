@@ -5,5 +5,5 @@ services:
     build: .
     container_name: cursok8s
     ports:
-      - "8080:80"
+      - "8086:80"
     restart: unless-stopped
