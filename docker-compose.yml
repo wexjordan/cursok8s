@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: cursok8s:latest
+    image: wexjordan/cursok8s:local
     container_name: cursok8s
     ports:
       - "8086:80"
