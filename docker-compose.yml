@@ -1,21 +1,9 @@
 version: "3.8"
 
-  services:
-    cursok8s:
-      build: .
-      ports:
-        - "8080:80"
-      restart: unless-stopped
-
-  O si prefieres usar una imagen ya publicada en Docker Hub en lugar de hacer build:
-
-  version: "3.8"
-
-  services:
-    cursok8s:
-      image: nginx:alpine
-      ports:
-        - "8080:80"
-      volumes:
-        - ./index.html:/usr/share/nginx/html/index.html:ro
-      restart: unless-stopped
+services:
+  cursok8s:
+    build: .
+    container_name: cursok8s
+    ports:
+      - "8080:80"
+    restart: unless-stopped
