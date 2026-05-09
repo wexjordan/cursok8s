@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubernetes Completo | Curso en Español</title>
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --purple: #b700ff;
+    --blue: #0050ff;
+    --green: #00ff88;
+    --bg: #030712;
+    --bg2: #0a0f1e;
+    --bg3: #0d1428;
+    --card: #0f172a;
+    --border: #1e2a45;
+    --text: #c8d6f0;
+    --text2: #7a92b8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* CANVAS BACKGROUND */
+  #bg-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* HEADER */
+  header {
+    position: relative; z-index: 10;
+    background: linear-gradient(180deg, rgba(3,7,18,0.98) 0%, rgba(10,15,30,0.95) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    backdrop-filter: blur(10px);
+    position: fixed; top: 0; width: 100%;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    letter-spacing: 2px;
+  }
+  .logo svg { width: 36px; height: 36px; }
+  nav { display: flex; gap: 1.5rem; }
+  nav a {
+    color: var(--text2); text-decoration: none;
+    font-size: 0.85rem; letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  nav a:hover { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+
+  /* HERO */
+  .hero {
+    position: relative; z-index: 5;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 2rem;
+    padding-top: 80px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,245,255,0.08);
+    border: 1px solid rgba(0,245,255,0.3);
+    border-radius: 50px; padding: 6px 18px;
+    font-size: 0.8rem; letter-spacing: 2px;
+    color: var(--cyan); margin-bottom: 2rem;
+    animation: pulse-border 2s infinite;
+  }
+  @keyframes pulse-border {
+    0%,100% { border-color: rgba(0,245,255,0.3); }
+    50% { border-color: rgba(0,245,255,0.8); }
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 900; line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--cyan) 40%, var(--purple) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+    letter-spacing: -1px;
+  }
+  .hero p {
+    font-size: 1.15rem; color: var(--text2);
+    max-width: 600px; line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+  .hero-stats {
+    display: flex; gap: 3rem; margin-bottom: 3rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .stat { text-align: center; }
+  .stat-n {
+    font-size: 2rem; font-weight: 800;
+    color: var(--cyan); text-shadow: 0 0 20px var(--cyan);
+    display: block;
+  }
+  .stat-l { font-size: 0.78rem; color: var(--text2); letter-spacing: 1px; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    color: #fff; border: none; padding: 14px 36px;
+    border-radius: 6px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px;
+    box-shadow: 0 0 30px rgba(0,80,255,0.4);
+    transition: all 0.3s; text-decoration: none; display: inline-block;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 50px rgba(0,80,255,0.6);
+  }
+  .scroll-hint {
+    position: absolute; bottom: 2rem;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text2); font-size: 0.75rem; letter-spacing: 2px;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+
+  /* MAIN LAYOUT */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* MODULES GRID */
+  .section {
+    position: relative; z-index: 5;
+    padding: 6rem 0;
+  }
+  .section-title {
+    text-align: center; margin-bottom: 1rem;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 30%, var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .section-sub {
+    text-align: center; color: var(--text2);
+    margin-bottom: 4rem; font-size: 1rem;
+  }
+
+  /* MODULE CARDS */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .module-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .module-card:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 30px rgba(0,245,255,0.1);
+    transform: translateY(-4px);
+  }
+  .module-header {
+    padding: 1.4rem 1.5rem 1rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+  }
+  .module-num {
+    font-size: 0.7rem; letter-spacing: 2px;
+    color: var(--cyan); font-weight: 700;
+    background: rgba(0,245,255,0.1);
+    border: 1px solid rgba(0,245,255,0.25);
+    border-radius: 4px; padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .module-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .module-info h3 {
+    font-size: 1.05rem; font-weight: 700;
+    color: #e2eaf8; margin-bottom: 4px;
+  }
+  .module-info p {
+    font-size: 0.82rem; color: var(--text2); line-height: 1.5;
+  }
+  .module-topics {
+    padding: 0 1.5rem 1.4rem;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .topic-tag {
+    font-size: 0.72rem; color: var(--text2);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 3px 9px;
+    transition: all 0.2s;
+  }
+  .module-card:hover .topic-tag {
+    border-color: rgba(0,245,255,0.2);
+    color: var(--text);
+  }
+
+  /* CONTENT AREA */
+  .content-section {
+    position: relative; z-index: 5;
+    padding: 4rem 0;
+  }
+  .content-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media(max-width:768px){ .content-grid { grid-template-columns: 1fr; } }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    position: sticky; top: 80px;
+  }
+  .sidebar h4 {
+    font-size: 0.7rem; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--cyan);
+    margin-bottom: 1rem; padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar ul { list-style: none; }
+  .sidebar ul li { margin-bottom: 2px; }
+  .sidebar ul li a {
+    display: block; padding: 6px 10px;
+    color: var(--text2); text-decoration: none;
+    border-radius: 6px; font-size: 0.83rem;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+  }
+  .sidebar ul li a:hover,
+  .sidebar ul li a.active {
+    color: var(--cyan);
+    background: rgba(0,245,255,0.06);
+    border-left-color: var(--cyan);
+    padding-left: 14px;
+  }
+
+  /* LESSON CONTENT */
+  .lesson-area {
+    display: flex; flex-direction: column; gap: 2rem;
+  }
+  .lesson-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    scroll-margin-top: 90px;
+  }
+  .lesson-block h2 {
+    font-size: 1.6rem; font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #fff, var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .lesson-block h3 {
+    font-size: 1.15rem; font-weight: 700;
+    color: var(--cyan); margin: 1.8rem 0 0.8rem;
+  }
+  .lesson-block p {
+    color: var(--text); line-height: 1.8;
+    margin-bottom: 1rem; font-size: 0.95rem;
+  }
+  .lesson-block ul, .lesson-block ol {
+    margin: 0.5rem 0 1rem 1.5rem;
+    color: var(--text); font-size: 0.95rem; line-height: 1.8;
+  }
+  .lesson-block li { margin-bottom: 4px; }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: #020817;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 1.2rem 0;
+    overflow: hidden;
+  }
+  .code-header {
+    background: rgba(255,255,255,0.04);
+    padding: 8px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-size: 0.7rem; color: var(--cyan);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .code-copy {
+    font-size: 0.7rem; color: var(--text2);
+    background: none; border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px 8px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .code-copy:hover { color: var(--cyan); border-color: var(--cyan); }
+  pre {
+    padding: 1.2rem 1.4rem;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+  .kw { color: #c792ea; }
+  .str { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .num { color: #f78c6c; }
+  .fn { color: #82aaff; }
+  .key { color: #89ddff; }
+  .val { color: #c3e88d; }
+
+  /* CALLOUT */
+  .callout {
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 1.2rem 0;
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 0.9rem;
+  }
+  .callout.info {
+    background: rgba(0,80,255,0.08);
+    border: 1px solid rgba(0,80,255,0.3);
+    color: #93b4ff;
+  }
+  .callout.tip {
+    background: rgba(0,255,136,0.06);
+    border: 1px solid rgba(0,255,136,0.25);
+    color: #80ffb8;
+  }
+  .callout.warn {
+    background: rgba(255,180,0,0.07);
+    border: 1px solid rgba(255,180,0,0.3);
+    color: #ffd280;
+  }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram {
+    background: #020817;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    color: var(--text2);
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .arch-diagram .hl { color: var(--cyan); }
+  .arch-diagram .hl2 { color: var(--green); }
+  .arch-diagram .hl3 { color: var(--purple); }
+
+  /* TABLE */
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 1.2rem 0; font-size: 0.88rem;
+  }
+  th {
+    background: rgba(0,245,255,0.08);
+    color: var(--cyan); padding: 10px 14px;
+    text-align: left; border-bottom: 1px solid var(--border);
+    font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: rgba(0,245,255,0.05);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: 8px; padding: 1.2rem;
+    margin-bottom: 2rem;
+  }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 0.78rem; color: var(--text2); margin-bottom: 8px;
+  }
+  .progress-bar {
+    height: 6px; background: rgba(255,255,255,0.07);
+    border-radius: 50px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    border-radius: 50px;
+    transition: width 1s ease;
+    box-shadow: 0 0 10px var(--cyan);
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative; z-index: 5;
+    text-align: center; padding: 3rem 2rem;
+    border-top: 1px solid var(--border);
+    color: var(--text2); font-size: 0.82rem;
+  }
+  footer span { color: var(--cyan); }
+
+  /* SCROLL TO TOP */
+  .scroll-top {
+    position: fixed; bottom: 2rem; right: 2rem;
+    z-index: 100;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border: none; width: 44px; height: 44px;
+    border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(0,245,255,0.3);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .scroll-top.visible { opacity: 1; }
+  .scroll-top svg { width: 18px; height: 18px; stroke: #fff; }
+
+  /* GLITCH EFFECT */
+  .glitch {
+    position: relative;
+    animation: glitch-anim 4s infinite;
+  }
+  @keyframes glitch-anim {
+    0%,90%,100% { text-shadow: none; }
+    92% { text-shadow: -2px 0 var(--cyan), 2px 0 var(--purple); }
+    94% { text-shadow: 2px 0 var(--cyan), -2px 0 var(--purple); }
+    96% { text-shadow: none; }
+  }
+
+  /* RESPONSIVE */
+  @media(max-width:640px){
+    nav { display: none; }
+    .hero-stats { gap: 1.5rem; }
+    .lesson-block { padding: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 100 100" fill="none">
+      <circle cx="50" cy="50" r="45" stroke="#00f5ff" stroke-width="3"/>
+      <path d="M50 20 L62 32 L74 26 L74 50 L62 68 L50 80 L38 68 L26 50 L26 26 L38 32 Z" stroke="#00f5ff" stroke-width="2.5" fill="none"/>
+      <circle cx="50" cy="50" r="10" fill="#00f5ff" fill-opacity="0.3"/>
+      <circle cx="50" cy="20" r="5" fill="#00f5ff"/>
+      <circle cx="74" cy="26" r="5" fill="#b700ff"/>
+      <circle cx="74" cy="50" r="5" fill="#00ff88"/>
+      <circle cx="50" cy="80" r="5" fill="#00f5ff"/>
+      <circle cx="26" cy="50" r="5" fill="#b700ff"/>
+      <circle cx="26" cy="26" r="5" fill="#00ff88"/>
+    </svg>
+    KUBERNETES
+  </div>
+  <nav>
+    <a href="#modulos">Módulos</a>
+    <a href="#contenido">Contenido</a>
+    <a href="#recursos">Recursos</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span>●</span> CURSO COMPLETO 2024
+  </div>
+  <h1 class="glitch">Kubernetes<br>Dominio Total</h1>
+  <p>Aprende orquestación de contenedores desde cero hasta producción. Arquitectura, despliegues, redes, seguridad y más.</p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-n">12</span><span class="stat-l">MÓDULOS</span></div>
+    <div class="stat"><span class="stat-n">80+</span><span class="stat-l">LECCIONES</span></div>
+    <div class="stat"><span class="stat-n">50+</span><span class="stat-l">EJEMPLOS</span></div>
+    <div class="stat"><span class="stat-n">100%</span><span class="stat-l">ESPAÑOL</span></div>
+  </div>
+  <a href="#modulos" class="btn-primary">COMENZAR CURSO</a>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- MODULES OVERVIEW -->
+<section class="section" id="modulos">
+  <div class="container">
+    <h2 class="section-title">Plan de Estudios</h2>
+    <p class="section-sub">Un viaje completo desde los fundamentos hasta producción avanzada</p>
+    <div class="modules-grid">
+
+      <div class="module-card" onclick="scrollToLesson('m1')">
+        <div class="module-header">
+          <div>
+            <div class="module-num">MÓDULO 01</div>
+          </div>
+          <div class="module-icon" style="background:rgba(0,245,255,0.1)">☁️</div>
+          <div class="module-info">
+            <h3>Introducción a Kubernetes</h3>
+            <p>Qué es, por qué usarlo y conceptos fundamentales de orquestación.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">¿Qué es K8s?</span>
+          <span class="topic-tag">Historia</span>
+          <span class="topic-tag">Contenedores</span>
+          <span class="topic-tag">Instalación</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m2')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 02</div></div>
+          <div class="module-icon" style="background:rgba(183,0,255,0.1)">🏗️</div>
+          <div class="module-info">
+            <h3>Arquitectura</h3>
+            <p>Control Plane, Worker Nodes, etcd, API Server y componentes clave.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">Control Plane</span>
+          <span class="topic-tag">etcd</span>
+          <span class="topic-tag">kubelet</span>
+          <span class="topic-tag">kube-proxy</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m3')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 03</div></div>
+          <div class="module-icon" style="background:rgba(0,255,136,0.1)">📦</div>
+          <div class="module-info">
+            <h3>Pods</h3>
+            <p>La unidad básica de despliegue. Ciclo de vida, configuración y multi-container.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">Pod Spec</span>
+          <span class="topic-tag">Init Containers</span>
+          <span class="topic-tag">Sidecars</span>
+          <span class="topic-tag">Probes</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m4')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 04</div></div>
+          <div class="module-icon" style="background:rgba(0,80,255,0.1)">🔄</div>
+          <div class="module-info">
+            <h3>Workloads</h3>
+            <p>Deployments, StatefulSets, DaemonSets, Jobs y CronJobs explicados.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">Deployment</span>
+          <span class="topic-tag">StatefulSet</span>
+          <span class="topic-tag">DaemonSet</span>
+          <span class="topic-tag">Jobs</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m5')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 05</div></div>
+          <div class="module-icon" style="background:rgba(0,245,255,0.1)">🌐</div>
+          <div class="module-info">
+            <h3>Servicios y Redes</h3>
+            <p>ClusterIP, NodePort, LoadBalancer, Ingress y DNS interno.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">ClusterIP</span>
+          <span class="topic-tag">LoadBalancer</span>
+          <span class="topic-tag">Ingress</span>
+          <span class="topic-tag">DNS</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m6')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 06</div></div>
+          <div class="module-icon" style="background:rgba(183,0,255,0.1)">💾</div>
+          <div class="module-info">
+            <h3>Storage y Volúmenes</h3>
+            <p>PersistentVolumes, PVC, StorageClass y gestión de datos.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">PV / PVC</span>
+          <span class="topic-tag">StorageClass</span>
+          <span class="topic-tag">ConfigMap</span>
+          <span class="topic-tag">Secrets</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m7')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 07</div></div>
+          <div class="module-icon" style="background:rgba(0,255,136,0.1)">🔐</div>
+          <div class="module-info">
+            <h3>Seguridad (RBAC)</h3>
+            <p>Roles, ClusterRoles, ServiceAccounts, NetworkPolicies y PodSecurity.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">RBAC</span>
+          <span class="topic-tag">ServiceAccount</span>
+          <span class="topic-tag">NetworkPolicy</span>
+          <span class="topic-tag">Secrets</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m8')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 08</div></div>
+          <div class="module-icon" style="background:rgba(0,80,255,0.1)">⚖️</div>
+          <div class="module-info">
+            <h3>Escalado y Scheduling</h3>
+            <p>HPA, VPA, Node Affinity, Taints/Tolerations y Pod Disruption.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">HPA</span>
+          <span class="topic-tag">VPA</span>
+          <span class="topic-tag">Affinity</span>
+          <span class="topic-tag">Taints</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m9')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 09</div></div>
+          <div class="module-icon" style="background:rgba(0,245,255,0.1)">🎛️</div>
+          <div class="module-info">
+            <h3>ConfigMaps y Secrets</h3>
+            <p>Gestión de configuración y datos sensibles de forma segura.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">ConfigMap</span>
+          <span class="topic-tag">Secrets</span>
+          <span class="topic-tag">Env Vars</span>
+          <span class="topic-tag">Volumes</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m10')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 10</div></div>
+          <div class="module-icon" style="background:rgba(183,0,255,0.1)">⛑️</div>
+          <div class="module-info">
+            <h3>Helm - Package Manager</h3>
+            <p>Charts, Templates, Repositorios y despliegues reproducibles.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">Charts</span>
+          <span class="topic-tag">Templates</span>
+          <span class="topic-tag">Values</span>
+          <span class="topic-tag">Repos</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m11')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 11</div></div>
+          <div class="module-icon" style="background:rgba(0,255,136,0.1)">📊</div>
+          <div class="module-info">
+            <h3>Monitoring y Logging</h3>
+            <p>Prometheus, Grafana, ELK Stack y alertas en producción.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">Prometheus</span>
+          <span class="topic-tag">Grafana</span>
+          <span class="topic-tag">ELK</span>
+          <span class="topic-tag">Alertas</span>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="scrollToLesson('m12')">
+        <div class="module-header">
+          <div><div class="module-num">MÓDULO 12</div></div>
+          <div class="module-icon" style="background:rgba(0,80,255,0.1)">🚀</div>
+          <div class="module-info">
+            <h3>CI/CD y Producción</h3>
+            <p>GitOps, ArgoCD, estrategias de despliegue y mejores prácticas.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">GitOps</span>
+          <span class="topic-tag">ArgoCD</span>
+          <span class="topic-tag">Blue/Green</span>
+          <span class="topic-tag">Canary</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- COURSE CONTENT -->
+<section class="content-section" id="contenido">
+  <div class="container">
+    <div class="content-grid">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <h4>Contenido</h4>
+        <ul>
+          <li><a href="#m1" id="nav-m1">01 · Introducción</a></li>
+          <li><a href="#m2" id="nav-m2">02 · Arquitectura</a></li>
+          <li><a href="#m3" id="nav-m3">03 · Pods</a></li>
+          <li><a href="#m4" id="nav-m4">04 · Workloads</a></li>
+          <li><a href="#m5" id="nav-m5">05 · Servicios y Redes</a></li>
+          <li><a href="#m6" id="nav-m6">06 · Storage</a></li>
+          <li><a href="#m7" id="nav-m7">07 · Seguridad RBAC</a></li>
+          <li><a href="#m8" id="nav-m8">08 · Escalado</a></li>
+          <li><a href="#m9" id="nav-m9">09 · ConfigMaps</a></li>
+          <li><a href="#m10" id="nav-m10">10 · Helm</a></li>
+          <li><a href="#m11" id="nav-m11">11 · Monitoring</a></li>
+          <li><a href="#m12" id="nav-m12">12 · CI/CD</a></li>
+        </ul>
+      </aside>
+
+      <!-- LESSONS -->
+      <div class="lesson-area">
+
+        <!-- M1 -->
+        <div class="lesson-block" id="m1">
+          <h2>Módulo 01 — Introducción a Kubernetes</h2>
+          <h3>¿Qué es Kubernetes?</h3>
+          <p>Kubernetes (K8s) es una plataforma open-source de orquestación de contenedores, originalmente desarrollada por Google y ahora mantenida por la CNCF. Su nombre proviene del griego "timonel" o "piloto". Se ocupa de automatizar el despliegue, escalado y gestión de aplicaciones en contenedores.</p>
+          <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <span>Kubernetes surgió de la experiencia de Google con su sistema interno llamado <strong>Borg</strong>, que durante años gestionó millones de contenedores en producción.</span>
+          </div>
+
+          <h3>¿Por qué Kubernetes?</h3>
+          <p>Antes de Kubernetes, desplegar aplicaciones en múltiples servidores era una tarea manual y propensa a errores. K8s resuelve problemas reales:</p>
+          <ul>
+            <li><strong>Alta disponibilidad:</strong> reinicia contenedores caídos automáticamente</li>
+            <li><strong>Escalado automático:</strong> aumenta o reduce réplicas según la demanda</li>
+            <li><strong>Despliegues sin downtime:</strong> rolling updates y rollbacks</li>
+            <li><strong>Gestión de configuración:</strong> ConfigMaps y Secrets integrados</li>
+            <li><strong>Service Discovery:</strong> DNS interno y balanceo de carga</li>
+          </ul>
+
+          <h3>Instalación — minikube (local)</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Instalar minikube en Linux</span>
+<span class="fn">curl</span> -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+<span class="fn">sudo</span> install minikube-linux-amd64 /usr/local/bin/minikube
+
+<span class="cm"># Instalar kubectl</span>
+<span class="fn">curl</span> -LO <span class="str">"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"</span>
+<span class="fn">sudo</span> install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+<span class="cm"># Iniciar cluster local</span>
+<span class="fn">minikube</span> start --driver=docker --cpus=2 --memory=4096
+
+<span class="cm"># Verificar</span>
+<span class="fn">kubectl</span> cluster-info
+<span class="fn">kubectl</span> get nodes</pre>
+          </div>
+
+          <h3>Comandos esenciales de kubectl</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Ver recursos del cluster</span>
+<span class="fn">kubectl</span> get nodes
+<span class="fn">kubectl</span> get pods --all-namespaces
+<span class="fn">kubectl</span> get services
+
+<span class="cm"># Información detallada</span>
+<span class="fn">kubectl</span> describe node &lt;nombre-nodo&gt;
+<span class="fn">kubectl</span> describe pod &lt;nombre-pod&gt;
+
+<span class="cm"># Ver logs</span>
+<span class="fn">kubectl</span> logs &lt;pod-name&gt;
+<span class="fn">kubectl</span> logs -f &lt;pod-name&gt;  <span class="cm"># en tiempo real</span>
+
+<span class="cm"># Ejecutar comando dentro de un pod</span>
+<span class="fn">kubectl</span> exec -it &lt;pod-name&gt; -- /bin/bash</pre>
+          </div>
+        </div>
+
+        <!-- M2 -->
+        <div class="lesson-block" id="m2">
+          <h2>Módulo 02 — Arquitectura de Kubernetes</h2>
+          <p>Un cluster de Kubernetes está compuesto por dos tipos de nodos: el <strong>Control Plane</strong> (cerebro del cluster) y los <strong>Worker Nodes</strong> (donde corren las aplicaciones).</p>
+
+          <div class="arch-diagram"><span class="hl">┌─────────────────────────────────────────────────────────┐
+│                    CONTROL PLANE                        │
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │  API Server  │  │  Scheduler   │  │  Controller  │  │
+│  │  (kube-api)  │  │              │  │   Manager    │  │
+│  └──────┬───────┘  └──────────────┘  └──────────────┘  │
+│         │                                               │
+│  ┌──────▼───────────────────────────────────────────┐   │
+│  │                    etcd                          │   │
+│  │           (base de datos distribuida)            │   │
+│  └──────────────────────────────────────────────────┘   │
+└──────────────────────────┬──────────────────────────────┘
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+┌─────────▼──────┐ ┌───────▼───────┐ ┌─────▼──────────┐
+│  WORKER NODE 1 │ │ WORKER NODE 2 │ │ WORKER NODE 3  │
+│                │ │               │ │                │
+│ ┌────────────┐ │ │ ┌───────────┐ │ │ ┌────────────┐ │
+│ │  kubelet   │ │ │ │  kubelet  │ │ │ │  kubelet   │ │</span>
+<span class="hl2">│ │ kube-proxy │ │ │ │kube-proxy │ │ │ │ kube-proxy │ │
+│ │  Pod  Pod  │ │ │ │ Pod  Pod  │ │ │ │  Pod  Pod  │ │</span>
+<span class="hl">│ └────────────┘ │ │ └───────────┘ │ │ └────────────┘ │
+└────────────────┘ └───────────────┘ └────────────────┘</span></div>
+
+          <h3>Componentes del Control Plane</h3>
+          <table>
+            <tr><th>Componente</th><th>Función</th></tr>
+            <tr><td><strong>kube-apiserver</strong></td><td>Punto de entrada de todas las solicitudes REST. Frontend del Control Plane.</td></tr>
+            <tr><td><strong>etcd</strong></td><td>Base de datos key-value distribuida. Almacena todo el estado del cluster.</td></tr>
+            <tr><td><strong>kube-scheduler</strong></td><td>Decide en qué nodo se ejecuta cada Pod nuevo.</td></tr>
+            <tr><td><strong>controller-manager</strong></td><td>Ejecuta controladores que regulan el estado del cluster.</td></tr>
+            <tr><td><strong>cloud-controller</strong></td><td>Integra el cluster con el proveedor de nube (AWS, GCP, Azure).</td></tr>
+          </table>
+
+          <h3>Componentes del Worker Node</h3>
+          <table>
+            <tr><th>Componente</th><th>Función</th></tr>
+            <tr><td><strong>kubelet</strong></td><td>Agente que corre en cada nodo. Asegura que los contenedores estén corriendo.</td></tr>
+            <tr><td><strong>kube-proxy</strong></td><td>Mantiene las reglas de red. Permite la comunicación entre Pods y Servicios.</td></tr>
+            <tr><td><strong>Container Runtime</strong></td><td>Software que ejecuta contenedores (containerd, CRI-O, Docker).</td></tr>
+          </table>
+
+          <div class="callout tip">
+            <span class="callout-icon">💡</span>
+            <span><strong>Tip:</strong> En producción, siempre usa 3 o más nodos de Control Plane para alta disponibilidad. Un solo nodo de control es un punto único de falla (SPOF).</span>
+          </div>
+        </div>
+
+        <!-- M3 -->
+        <div class="lesson-block" id="m3">
+          <h2>Módulo 03 — Pods</h2>
+          <p>El <strong>Pod</strong> es la unidad más pequeña en Kubernetes. Representa uno o más contenedores que comparten red y almacenamiento. Los Pods son efímeros: si mueren, no se recrean solos (para eso existen los Deployments).</p>
+
+          <h3>Pod básico</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">v1</span>
+<span class="key">kind</span>: <span class="val">Pod</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-pod</span>
+  <span class="key">labels</span>:
+    <span class="key">app</span>: <span class="val">web</span>
+    <span class="key">version</span>: <span class="val">"1.0"</span>
+<span class="key">spec</span>:
+  <span class="key">containers</span>:
+  - <span class="key">name</span>: <span class="val">nginx</span>
+    <span class="key">image</span>: <span class="val">nginx:1.25</span>
+    <span class="key">ports</span>:
+    - <span class="key">containerPort</span>: <span class="num">80</span>
+    <span class="key">resources</span>:
+      <span class="key">requests</span>:
+        <span class="key">memory</span>: <span class="val">"64Mi"</span>
+        <span class="key">cpu</span>: <span class="val">"250m"</span>
+      <span class="key">limits</span>:
+        <span class="key">memory</span>: <span class="val">"128Mi"</span>
+        <span class="key">cpu</span>: <span class="val">"500m"</span></pre>
+          </div>
+
+          <h3>Liveness y Readiness Probes</h3>
+          <p>Las probes permiten a Kubernetes saber si tu aplicación está sana y lista para recibir tráfico:</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">livenessProbe</span>:   <span class="cm"># reinicia el pod si falla</span>
+  <span class="key">httpGet</span>:
+    <span class="key">path</span>: <span class="val">/healthz</span>
+    <span class="key">port</span>: <span class="num">8080</span>
+  <span class="key">initialDelaySeconds</span>: <span class="num">30</span>
+  <span class="key">periodSeconds</span>: <span class="num">10</span>
+  <span class="key">failureThreshold</span>: <span class="num">3</span>
+
+<span class="key">readinessProbe</span>:  <span class="cm"># retira del balanceo si falla</span>
+  <span class="key">httpGet</span>:
+    <span class="key">path</span>: <span class="val">/ready</span>
+    <span class="key">port</span>: <span class="num">8080</span>
+  <span class="key">initialDelaySeconds</span>: <span class="num">5</span>
+  <span class="key">periodSeconds</span>: <span class="num">5</span>
+
+<span class="key">startupProbe</span>:   <span class="cm"># para apps lentas al arrancar</span>
+  <span class="key">httpGet</span>:
+    <span class="key">path</span>: <span class="val">/healthz</span>
+    <span class="key">port</span>: <span class="num">8080</span>
+  <span class="key">failureThreshold</span>: <span class="num">30</span>
+  <span class="key">periodSeconds</span>: <span class="num">10</span></pre>
+          </div>
+
+          <h3>Ciclo de vida de un Pod</h3>
+          <table>
+            <tr><th>Fase</th><th>Descripción</th></tr>
+            <tr><td><strong>Pending</strong></td><td>Fue aceptado pero aún no está corriendo (descargando imagen, etc.)</td></tr>
+            <tr><td><strong>Running</strong></td><td>Al menos un contenedor está corriendo</td></tr>
+            <tr><td><strong>Succeeded</strong></td><td>Todos los contenedores terminaron con éxito (exit 0)</td></tr>
+            <tr><td><strong>Failed</strong></td><td>Al menos un contenedor falló (exit != 0)</td></tr>
+            <tr><td><strong>Unknown</strong></td><td>No se puede obtener el estado (problema de red con el nodo)</td></tr>
+          </table>
+        </div>
+
+        <!-- M4 -->
+        <div class="lesson-block" id="m4">
+          <h2>Módulo 04 — Workloads</h2>
+
+          <h3>Deployment</h3>
+          <p>El Deployment es el recurso más común. Gestiona ReplicaSets para garantizar que siempre haya N copias de tu Pod corriendo.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">apps/v1</span>
+<span class="key">kind</span>: <span class="val">Deployment</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-app</span>
+  <span class="key">namespace</span>: <span class="val">production</span>
+<span class="key">spec</span>:
+  <span class="key">replicas</span>: <span class="num">3</span>
+  <span class="key">strategy</span>:
+    <span class="key">type</span>: <span class="val">RollingUpdate</span>
+    <span class="key">rollingUpdate</span>:
+      <span class="key">maxSurge</span>: <span class="num">1</span>
+      <span class="key">maxUnavailable</span>: <span class="num">0</span>
+  <span class="key">selector</span>:
+    <span class="key">matchLabels</span>:
+      <span class="key">app</span>: <span class="val">mi-app</span>
+  <span class="key">template</span>:
+    <span class="key">metadata</span>:
+      <span class="key">labels</span>:
+        <span class="key">app</span>: <span class="val">mi-app</span>
+    <span class="key">spec</span>:
+      <span class="key">containers</span>:
+      - <span class="key">name</span>: <span class="val">app</span>
+        <span class="key">image</span>: <span class="val">myrepo/mi-app:v2.0</span>
+        <span class="key">ports</span>:
+        - <span class="key">containerPort</span>: <span class="num">3000</span></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Escalar deployment</span>
+<span class="fn">kubectl</span> scale deployment mi-app --replicas=5
+
+<span class="cm"># Rolling update de imagen</span>
+<span class="fn">kubectl</span> set image deployment/mi-app app=myrepo/mi-app:v3.0
+
+<span class="cm"># Ver historial de rollouts</span>
+<span class="fn">kubectl</span> rollout history deployment/mi-app
+
+<span class="cm"># Rollback a versión anterior</span>
+<span class="fn">kubectl</span> rollout undo deployment/mi-app
+
+<span class="cm"># Rollback a revisión específica</span>
+<span class="fn">kubectl</span> rollout undo deployment/mi-app --to-revision=2</pre>
+          </div>
+
+          <h3>StatefulSet</h3>
+          <p>Para aplicaciones que necesitan identidad estable y almacenamiento persistente (bases de datos, caches distribuidos).</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">apps/v1</span>
+<span class="key">kind</span>: <span class="val">StatefulSet</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">postgres</span>
+<span class="key">spec</span>:
+  <span class="key">serviceName</span>: <span class="val">"postgres"</span>
+  <span class="key">replicas</span>: <span class="num">3</span>
+  <span class="key">selector</span>:
+    <span class="key">matchLabels</span>:
+      <span class="key">app</span>: <span class="val">postgres</span>
+  <span class="key">template</span>:
+    <span class="key">metadata</span>:
+      <span class="key">labels</span>:
+        <span class="key">app</span>: <span class="val">postgres</span>
+    <span class="key">spec</span>:
+      <span class="key">containers</span>:
+      - <span class="key">name</span>: <span class="val">postgres</span>
+        <span class="key">image</span>: <span class="val">postgres:15</span>
+        <span class="key">volumeMounts</span>:
+        - <span class="key">name</span>: <span class="val">data</span>
+          <span class="key">mountPath</span>: <span class="val">/var/lib/postgresql/data</span>
+  <span class="key">volumeClaimTemplates</span>:
+  - <span class="key">metadata</span>:
+      <span class="key">name</span>: <span class="val">data</span>
+    <span class="key">spec</span>:
+      <span class="key">accessModes</span>: [<span class="val">"ReadWriteOnce"</span>]
+      <span class="key">resources</span>:
+        <span class="key">requests</span>:
+          <span class="key">storage</span>: <span class="val">10Gi</span></pre>
+          </div>
+
+          <h3>DaemonSet</h3>
+          <p>Garantiza que <em>todos</em> los nodos ejecuten una copia del Pod. Ideal para agentes de monitoreo, logging y networking.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">apps/v1</span>
+<span class="key">kind</span>: <span class="val">DaemonSet</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">fluentd-logging</span>
+<span class="key">spec</span>:
+  <span class="key">selector</span>:
+    <span class="key">matchLabels</span>:
+      <span class="key">name</span>: <span class="val">fluentd</span>
+  <span class="key">template</span>:
+    <span class="key">metadata</span>:
+      <span class="key">labels</span>:
+        <span class="key">name</span>: <span class="val">fluentd</span>
+    <span class="key">spec</span>:
+      <span class="key">containers</span>:
+      - <span class="key">name</span>: <span class="val">fluentd</span>
+        <span class="key">image</span>: <span class="val">fluent/fluentd-kubernetes-daemonset:v1</span>
+        <span class="key">volumeMounts</span>:
+        - <span class="key">name</span>: <span class="val">varlog</span>
+          <span class="key">mountPath</span>: <span class="val">/var/log</span>
+      <span class="key">volumes</span>:
+      - <span class="key">name</span>: <span class="val">varlog</span>
+        <span class="key">hostPath</span>:
+          <span class="key">path</span>: <span class="val">/var/log</span></pre>
+          </div>
+
+          <h3>CronJob</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">batch/v1</span>
+<span class="key">kind</span>: <span class="val">CronJob</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">backup-db</span>
+<span class="key">spec</span>:
+  <span class="key">schedule</span>: <span class="val">"0 2 * * *"</span>  <span class="cm"># cada día a las 2am</span>
+  <span class="key">jobTemplate</span>:
+    <span class="key">spec</span>:
+      <span class="key">template</span>:
+        <span class="key">spec</span>:
+          <span class="key">containers</span>:
+          - <span class="key">name</span>: <span class="val">backup</span>
+            <span class="key">image</span>: <span class="val">postgres:15</span>
+            <span class="key">command</span>: [<span class="str">"/bin/sh"</span>, <span class="str">"-c"</span>, <span class="str">"pg_dump $DATABASE_URL | gzip > /backup/db.sql.gz"</span>]
+          <span class="key">restartPolicy</span>: <span class="val">OnFailure</span></pre>
+          </div>
+        </div>
+
+        <!-- M5 -->
+        <div class="lesson-block" id="m5">
+          <h2>Módulo 05 — Servicios y Redes</h2>
+          <p>Un <strong>Service</strong> es una abstracción que expone una aplicación corriendo en Pods. Proporciona una dirección IP estable y balanceo de carga.</p>
+
+          <h3>Tipos de Service</h3>
+          <table>
+            <tr><th>Tipo</th><th>Acceso</th><th>Caso de uso</th></tr>
+            <tr><td><strong>ClusterIP</strong></td><td>Solo interno al cluster</td><td>Comunicación entre microservicios</td></tr>
+            <tr><td><strong>NodePort</strong></td><td>IP del nodo + puerto</td><td>Desarrollo, pruebas</td></tr>
+            <tr><td><strong>LoadBalancer</strong></td><td>IP pública (cloud)</td><td>Exponer app al exterior</td></tr>
+            <tr><td><strong>ExternalName</strong></td><td>Alias DNS externo</td><td>Acceder a servicios externos</td></tr>
+          </table>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># ClusterIP (por defecto)</span>
+<span class="key">apiVersion</span>: <span class="val">v1</span>
+<span class="key">kind</span>: <span class="val">Service</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-servicio</span>
+<span class="key">spec</span>:
+  <span class="key">type</span>: <span class="val">ClusterIP</span>
+  <span class="key">selector</span>:
+    <span class="key">app</span>: <span class="val">mi-app</span>
+  <span class="key">ports</span>:
+  - <span class="key">protocol</span>: <span class="val">TCP</span>
+    <span class="key">port</span>: <span class="num">80</span>
+    <span class="key">targetPort</span>: <span class="num">3000</span></pre>
+          </div>
+
+          <h3>Ingress</h3>
+          <p>Ingress gestiona el acceso externo HTTP/HTTPS a los servicios del cluster, típicamente con un Ingress Controller (nginx, traefik, etc.).</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">networking.k8s.io/v1</span>
+<span class="key">kind</span>: <span class="val">Ingress</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-ingress</span>
+  <span class="key">annotations</span>:
+    <span class="key">nginx.ingress.kubernetes.io/rewrite-target</span>: <span class="val">/</span>
+    <span class="key">cert-manager.io/cluster-issuer</span>: <span class="val">letsencrypt-prod</span>
+<span class="key">spec</span>:
+  <span class="key">ingressClassName</span>: <span class="val">nginx</span>
+  <span class="key">tls</span>:
+  - <span class="key">hosts</span>: [<span class="val">app.midominio.com</span>]
+    <span class="key">secretName</span>: <span class="val">tls-secret</span>
+  <span class="key">rules</span>:
+  - <span class="key">host</span>: <span class="val">app.midominio.com</span>
+    <span class="key">http</span>:
+      <span class="key">paths</span>:
+      - <span class="key">path</span>: <span class="val">/api</span>
+        <span class="key">pathType</span>: <span class="val">Prefix</span>
+        <span class="key">backend</span>:
+          <span class="key">service</span>:
+            <span class="key">name</span>: <span class="val">api-service</span>
+            <span class="key">port</span>:
+              <span class="key">number</span>: <span class="num">80</span>
+      - <span class="key">path</span>: <span class="val">/</span>
+        <span class="key">pathType</span>: <span class="val">Prefix</span>
+        <span class="key">backend</span>:
+          <span class="key">service</span>:
+            <span class="key">name</span>: <span class="val">frontend-service</span>
+            <span class="key">port</span>:
+              <span class="key">number</span>: <span class="num">80</span></pre>
+          </div>
+
+          <div class="callout warn">
+            <span class="callout-icon">⚠️</span>
+            <span>Para que Ingress funcione necesitas un <strong>Ingress Controller</strong> instalado en el cluster. En minikube: <code>minikube addons enable ingress</code></span>
+          </div>
+        </div>
+
+        <!-- M6 -->
+        <div class="lesson-block" id="m6">
+          <h2>Módulo 06 — Storage y Volúmenes</h2>
+
+          <h3>PersistentVolume (PV) y PersistentVolumeClaim (PVC)</h3>
+          <p>Un <strong>PV</strong> es una pieza de almacenamiento en el cluster. Un <strong>PVC</strong> es una solicitud de almacenamiento por parte de un usuario.</p>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># PersistentVolume</span>
+<span class="key">apiVersion</span>: <span class="val">v1</span>
+<span class="key">kind</span>: <span class="val">PersistentVolume</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">pv-datos</span>
+<span class="key">spec</span>:
+  <span class="key">capacity</span>:
+    <span class="key">storage</span>: <span class="val">20Gi</span>
+  <span class="key">accessModes</span>:
+  - <span class="val">ReadWriteOnce</span>
+  <span class="key">persistentVolumeReclaimPolicy</span>: <span class="val">Retain</span>
+  <span class="key">storageClassName</span>: <span class="val">fast-ssd</span>
+  <span class="key">hostPath</span>:
+    <span class="key">path</span>: <span class="val">/mnt/datos</span>
+---
+<span class="cm"># PersistentVolumeClaim</span>
+<span class="key">apiVersion</span>: <span class="val">v1</span>
+<span class="key">kind</span>: <span class="val">PersistentVolumeClaim</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-pvc</span>
+<span class="key">spec</span>:
+  <span class="key">accessModes</span>:
+  - <span class="val">ReadWriteOnce</span>
+  <span class="key">storageClassName</span>: <span class="val">fast-ssd</span>
+  <span class="key">resources</span>:
+    <span class="key">requests</span>:
+      <span class="key">storage</span>: <span class="val">5Gi</span></pre>
+          </div>
+
+          <h3>StorageClass</h3>
+          <p>Define cómo se aprovisiona el almacenamiento dinámicamente. Cada proveedor de nube tiene sus propias StorageClasses.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">storage.k8s.io/v1</span>
+<span class="key">kind</span>: <span class="val">StorageClass</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">fast-ssd</span>
+<span class="key">provisioner</span>: <span class="val">ebs.csi.aws.com</span>  <span class="cm"># AWS EBS</span>
+<span class="key">parameters</span>:
+  <span class="key">type</span>: <span class="val">gp3</span>
+  <span class="key">iops</span>: <span class="val">"3000"</span>
+  <span class="key">throughput</span>: <span class="val">"125"</span>
+<span class="key">reclaimPolicy</span>: <span class="val">Delete</span>
+<span class="key">allowVolumeExpansion</span>: <span class="kw">true</span>
+<span class="key">volumeBindingMode</span>: <span class="val">WaitForFirstConsumer</span></pre>
+          </div>
+        </div>
+
+        <!-- M7 -->
+        <div class="lesson-block" id="m7">
+          <h2>Módulo 07 — Seguridad y RBAC</h2>
+
+          <h3>Role-Based Access Control</h3>
+          <p>RBAC controla quién puede hacer qué en el cluster. Los componentes principales son: <strong>Role</strong>, <strong>ClusterRole</strong>, <strong>RoleBinding</strong> y <strong>ClusterRoleBinding</strong>.</p>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Role (namespace-scoped)</span>
+<span class="key">apiVersion</span>: <span class="val">rbac.authorization.k8s.io/v1</span>
+<span class="key">kind</span>: <span class="val">Role</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">pod-reader</span>
+  <span class="key">namespace</span>: <span class="val">production</span>
+<span class="key">rules</span>:
+- <span class="key">apiGroups</span>: [<span class="str">""</span>]
+  <span class="key">resources</span>: [<span class="str">"pods"</span>, <span class="str">"pods/log"</span>]
+  <span class="key">verbs</span>: [<span class="str">"get"</span>, <span class="str">"list"</span>, <span class="str">"watch"</span>]
+---
+<span class="cm"># RoleBinding</span>
+<span class="key">apiVersion</span>: <span class="val">rbac.authorization.k8s.io/v1</span>
+<span class="key">kind</span>: <span class="val">RoleBinding</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">read-pods</span>
+  <span class="key">namespace</span>: <span class="val">production</span>
+<span class="key">subjects</span>:
+- <span class="key">kind</span>: <span class="val">ServiceAccount</span>
+  <span class="key">name</span>: <span class="val">mi-app-sa</span>
+  <span class="key">namespace</span>: <span class="val">production</span>
+<span class="key">roleRef</span>:
+  <span class="key">kind</span>: <span class="val">Role</span>
+  <span class="key">name</span>: <span class="val">pod-reader</span>
+  <span class="key">apiGroup</span>: <span class="val">rbac.authorization.k8s.io</span></pre>
+          </div>
+
+          <h3>NetworkPolicy</h3>
+          <p>Controla el tráfico de red entre Pods. Por defecto, Kubernetes permite todo el tráfico entre Pods.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">networking.k8s.io/v1</span>
+<span class="key">kind</span>: <span class="val">NetworkPolicy</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">deny-all-ingress</span>
+<span class="key">spec</span>:
+  <span class="key">podSelector</span>: {}  <span class="cm"># aplica a todos los pods</span>
+  <span class="key">policyTypes</span>:
+  - <span class="val">Ingress</span>
+  <span class="cm"># sin reglas = denegar todo ingress</span>
+---
+<span class="key">apiVersion</span>: <span class="val">networking.k8s.io/v1</span>
+<span class="key">kind</span>: <span class="val">NetworkPolicy</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">allow-frontend-to-api</span>
+<span class="key">spec</span>:
+  <span class="key">podSelector</span>:
+    <span class="key">matchLabels</span>:
+      <span class="key">app</span>: <span class="val">api</span>
+  <span class="key">ingress</span>:
+  - <span class="key">from</span>:
+    - <span class="key">podSelector</span>:
+        <span class="key">matchLabels</span>:
+          <span class="key">app</span>: <span class="val">frontend</span>
+    <span class="key">ports</span>:
+    - <span class="key">protocol</span>: <span class="val">TCP</span>
+      <span class="key">port</span>: <span class="num">8080</span></pre>
+          </div>
+        </div>
+
+        <!-- M8 -->
+        <div class="lesson-block" id="m8">
+          <h2>Módulo 08 — Escalado y Scheduling</h2>
+
+          <h3>Horizontal Pod Autoscaler (HPA)</h3>
+          <p>Escala automáticamente el número de réplicas basándose en métricas (CPU, memoria, métricas personalizadas).</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">autoscaling/v2</span>
+<span class="key">kind</span>: <span class="val">HorizontalPodAutoscaler</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-app-hpa</span>
+<span class="key">spec</span>:
+  <span class="key">scaleTargetRef</span>:
+    <span class="key">apiVersion</span>: <span class="val">apps/v1</span>
+    <span class="key">kind</span>: <span class="val">Deployment</span>
+    <span class="key">name</span>: <span class="val">mi-app</span>
+  <span class="key">minReplicas</span>: <span class="num">2</span>
+  <span class="key">maxReplicas</span>: <span class="num">20</span>
+  <span class="key">metrics</span>:
+  - <span class="key">type</span>: <span class="val">Resource</span>
+    <span class="key">resource</span>:
+      <span class="key">name</span>: <span class="val">cpu</span>
+      <span class="key">target</span>:
+        <span class="key">type</span>: <span class="val">Utilization</span>
+        <span class="key">averageUtilization</span>: <span class="num">70</span>
+  - <span class="key">type</span>: <span class="val">Resource</span>
+    <span class="key">resource</span>:
+      <span class="key">name</span>: <span class="val">memory</span>
+      <span class="key">target</span>:
+        <span class="key">type</span>: <span class="val">Utilization</span>
+        <span class="key">averageUtilization</span>: <span class="num">80</span></pre>
+          </div>
+
+          <h3>Node Affinity y Taints/Tolerations</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">spec</span>:
+  <span class="key">affinity</span>:
+    <span class="key">nodeAffinity</span>:
+      <span class="key">requiredDuringSchedulingIgnoredDuringExecution</span>:
+        <span class="key">nodeSelectorTerms</span>:
+        - <span class="key">matchExpressions</span>:
+          - <span class="key">key</span>: <span class="val">kubernetes.io/arch</span>
+            <span class="key">operator</span>: <span class="val">In</span>
+            <span class="key">values</span>: [<span class="val">amd64</span>]
+          - <span class="key">key</span>: <span class="val">node-type</span>
+            <span class="key">operator</span>: <span class="val">In</span>
+            <span class="key">values</span>: [<span class="val">gpu</span>]
+  <span class="key">tolerations</span>:
+  - <span class="key">key</span>: <span class="val">gpu</span>
+    <span class="key">operator</span>: <span class="val">Equal</span>
+    <span class="key">value</span>: <span class="str">"true"</span>
+    <span class="key">effect</span>: <span class="val">NoSchedule</span></pre>
+          </div>
+        </div>
+
+        <!-- M9 -->
+        <div class="lesson-block" id="m9">
+          <h2>Módulo 09 — ConfigMaps y Secrets</h2>
+
+          <h3>ConfigMap</h3>
+          <p>Almacena configuración no sensible en formato key-value o archivos de configuración completos.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">v1</span>
+<span class="key">kind</span>: <span class="val">ConfigMap</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">app-config</span>
+<span class="key">data</span>:
+  <span class="key">DATABASE_HOST</span>: <span class="val">postgres-service</span>
+  <span class="key">APP_PORT</span>: <span class="val">"3000"</span>
+  <span class="key">LOG_LEVEL</span>: <span class="val">info</span>
+  <span class="key">nginx.conf</span>: |
+    <span class="val">server {</span>
+    <span class="val">  listen 80;</span>
+    <span class="val">  location / { proxy_pass http://app:3000; }</span>
+    <span class="val">}</span>
+---
+<span class="cm"># Usar ConfigMap en un Pod</span>
+<span class="key">envFrom</span>:
+- <span class="key">configMapRef</span>:
+    <span class="key">name</span>: <span class="val">app-config</span>
+
+<span class="cm"># O variable específica:</span>
+<span class="key">env</span>:
+- <span class="key">name</span>: <span class="val">DB_HOST</span>
+  <span class="key">valueFrom</span>:
+    <span class="key">configMapKeyRef</span>:
+      <span class="key">name</span>: <span class="val">app-config</span>
+      <span class="key">key</span>: <span class="val">DATABASE_HOST</span></pre>
+          </div>
+
+          <h3>Secrets</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Crear secret desde literales</span>
+<span class="fn">kubectl</span> create secret generic db-credentials \
+  --from-literal=username=admin \
+  --from-literal=password=S3cur3P@ss!
+
+<span class="cm"># Crear secret desde archivo</span>
+<span class="fn">kubectl</span> create secret generic tls-secret \
+  --from-file=tls.crt=./cert.pem \
+  --from-file=tls.key=./key.pem</pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">v1</span>
+<span class="key">kind</span>: <span class="val">Secret</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">db-credentials</span>
+<span class="key">type</span>: <span class="val">Opaque</span>
+<span class="key">stringData</span>:  <span class="cm"># se encripta automáticamente en base64</span>
+  <span class="key">username</span>: <span class="val">admin</span>
+  <span class="key">password</span>: <span class="val">S3cur3P@ss!</span></pre>
+          </div>
+
+          <div class="callout warn">
+            <span class="callout-icon">⚠️</span>
+            <span>Los Secrets en Kubernetes están codificados en base64 pero <strong>NO encriptados</strong> por defecto. Para producción activa <strong>Encryption at Rest</strong> o usa soluciones como <strong>HashiCorp Vault</strong> o <strong>AWS Secrets Manager</strong>.</span>
+          </div>
+        </div>
+
+        <!-- M10 -->
+        <div class="lesson-block" id="m10">
+          <h2>Módulo 10 — Helm</h2>
+          <p>Helm es el gestor de paquetes de Kubernetes. Un <strong>Chart</strong> es un paquete de recursos Kubernetes con plantillas y valores configurables.</p>
+
+          <h3>Comandos esenciales</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Instalar Helm</span>
+<span class="fn">curl</span> https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+<span class="cm"># Agregar repositorio</span>
+<span class="fn">helm</span> repo add stable https://charts.helm.sh/stable
+<span class="fn">helm</span> repo add bitnami https://charts.bitnami.com/bitnami
+<span class="fn">helm</span> repo update
+
+<span class="cm"># Buscar charts</span>
+<span class="fn">helm</span> search repo nginx
+
+<span class="cm"># Instalar un chart</span>
+<span class="fn">helm</span> install mi-nginx bitnami/nginx \
+  --namespace web \
+  --create-namespace \
+  --set service.type=LoadBalancer \
+  --set replicaCount=3
+
+<span class="cm"># Listar releases</span>
+<span class="fn">helm</span> list --all-namespaces
+
+<span class="cm"># Actualizar release</span>
+<span class="fn">helm</span> upgrade mi-nginx bitnami/nginx --set replicaCount=5
+
+<span class="cm"># Rollback</span>
+<span class="fn">helm</span> rollback mi-nginx 1
+
+<span class="cm"># Desinstalar</span>
+<span class="fn">helm</span> uninstall mi-nginx</pre>
+          </div>
+
+          <h3>Crear un Chart propio</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="fn">helm</span> create mi-app
+<span class="cm"># Estructura generada:</span>
+<span class="cm"># mi-app/</span>
+<span class="cm"># ├── Chart.yaml        # metadata del chart</span>
+<span class="cm"># ├── values.yaml       # valores por defecto</span>
+<span class="cm"># ├── templates/        # plantillas YAML</span>
+<span class="cm"># │   ├── deployment.yaml</span>
+<span class="cm"># │   ├── service.yaml</span>
+<span class="cm"># │   └── ingress.yaml</span>
+<span class="cm"># └── charts/           # dependencias</span>
+
+<span class="cm"># Validar chart</span>
+<span class="fn">helm</span> lint mi-app
+
+<span class="cm"># Ver los YAMLs generados</span>
+<span class="fn">helm</span> template mi-app ./mi-app --values mi-app/values.yaml</pre>
+          </div>
+
+          <h3>values.yaml típico</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">replicaCount</span>: <span class="num">2</span>
+
+<span class="key">image</span>:
+  <span class="key">repository</span>: <span class="val">myrepo/mi-app</span>
+  <span class="key">tag</span>: <span class="val">"1.0.0"</span>
+  <span class="key">pullPolicy</span>: <span class="val">IfNotPresent</span>
+
+<span class="key">service</span>:
+  <span class="key">type</span>: <span class="val">ClusterIP</span>
+  <span class="key">port</span>: <span class="num">80</span>
+
+<span class="key">ingress</span>:
+  <span class="key">enabled</span>: <span class="kw">true</span>
+  <span class="key">host</span>: <span class="val">app.midominio.com</span>
+
+<span class="key">resources</span>:
+  <span class="key">limits</span>:
+    <span class="key">cpu</span>: <span class="val">500m</span>
+    <span class="key">memory</span>: <span class="val">512Mi</span>
+  <span class="key">requests</span>:
+    <span class="key">cpu</span>: <span class="val">100m</span>
+    <span class="key">memory</span>: <span class="val">128Mi</span>
+
+<span class="key">autoscaling</span>:
+  <span class="key">enabled</span>: <span class="kw">true</span>
+  <span class="key">minReplicas</span>: <span class="num">2</span>
+  <span class="key">maxReplicas</span>: <span class="num">10</span>
+  <span class="key">targetCPUUtilizationPercentage</span>: <span class="num">70</span></pre>
+          </div>
+        </div>
+
+        <!-- M11 -->
+        <div class="lesson-block" id="m11">
+          <h2>Módulo 11 — Monitoring y Logging</h2>
+
+          <h3>Stack Prometheus + Grafana</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="cm"># Instalar kube-prometheus-stack via Helm</span>
+<span class="fn">helm</span> repo add prometheus-community https://prometheus-community.github.io/helm-charts
+<span class="fn">helm</span> repo update
+
+<span class="fn">helm</span> install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace \
+  --set grafana.adminPassword=admin123 \
+  --set prometheus.prometheusSpec.retention=30d
+
+<span class="cm"># Ver pods del stack</span>
+<span class="fn">kubectl</span> get pods -n monitoring
+
+<span class="cm"># Acceder a Grafana (port-forward)</span>
+<span class="fn">kubectl</span> port-forward -n monitoring svc/monitoring-grafana 3000:80</pre>
+          </div>
+
+          <h3>ServiceMonitor para tus apps</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">monitoring.coreos.com/v1</span>
+<span class="key">kind</span>: <span class="val">ServiceMonitor</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-app-monitor</span>
+  <span class="key">namespace</span>: <span class="val">monitoring</span>
+<span class="key">spec</span>:
+  <span class="key">selector</span>:
+    <span class="key">matchLabels</span>:
+      <span class="key">app</span>: <span class="val">mi-app</span>
+  <span class="key">endpoints</span>:
+  - <span class="key">port</span>: <span class="val">metrics</span>
+    <span class="key">interval</span>: <span class="val">15s</span>
+    <span class="key">path</span>: <span class="val">/metrics</span></pre>
+          </div>
+
+          <h3>Logging con Loki + Promtail</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="fn">helm</span> repo add grafana https://grafana.github.io/helm-charts
+<span class="fn">helm</span> install loki grafana/loki-stack \
+  --namespace monitoring \
+  --set grafana.enabled=false \
+  --set promtail.enabled=true
+
+<span class="cm"># En Grafana, agregar datasource Loki:</span>
+<span class="cm"># URL: http://loki:3100</span>
+<span class="cm"># Query ejemplo LogQL:</span>
+<span class="cm"># {namespace="production", app="mi-app"} |= "error"</span></pre>
+          </div>
+
+          <h3>Alertas con AlertManager</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">monitoring.coreos.com/v1</span>
+<span class="key">kind</span>: <span class="val">PrometheusRule</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">alertas-app</span>
+<span class="key">spec</span>:
+  <span class="key">groups</span>:
+  - <span class="key">name</span>: <span class="val">app.rules</span>
+    <span class="key">rules</span>:
+    - <span class="key">alert</span>: <span class="val">PodCrashLooping</span>
+      <span class="key">expr</span>: <span class="val">rate(kube_pod_container_status_restarts_total[5m]) > 0.1</span>
+      <span class="key">for</span>: <span class="val">5m</span>
+      <span class="key">labels</span>:
+        <span class="key">severity</span>: <span class="val">critical</span>
+      <span class="key">annotations</span>:
+        <span class="key">summary</span>: <span class="str">"Pod {{ $labels.pod }} en CrashLoopBackOff"</span></pre>
+          </div>
+        </div>
+
+        <!-- M12 -->
+        <div class="lesson-block" id="m12">
+          <h2>Módulo 12 — CI/CD y GitOps con ArgoCD</h2>
+
+          <h3>Instalar ArgoCD</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="fn">kubectl</span> create namespace argocd
+<span class="fn">kubectl</span> apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+<span class="cm"># Obtener contraseña inicial</span>
+<span class="fn">kubectl</span> get secret argocd-initial-admin-secret \
+  -n argocd -o jsonpath="{.data.password}" | base64 -d
+
+<span class="cm"># Port-forward para acceder a la UI</span>
+<span class="fn">kubectl</span> port-forward svc/argocd-server -n argocd 8080:443</pre>
+          </div>
+
+          <h3>Application en ArgoCD</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">argoproj.io/v1alpha1</span>
+<span class="key">kind</span>: <span class="val">Application</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-app-prod</span>
+  <span class="key">namespace</span>: <span class="val">argocd</span>
+<span class="key">spec</span>:
+  <span class="key">project</span>: <span class="val">default</span>
+  <span class="key">source</span>:
+    <span class="key">repoURL</span>: <span class="val">https://github.com/mi-org/mi-app-k8s</span>
+    <span class="key">targetRevision</span>: <span class="val">HEAD</span>
+    <span class="key">path</span>: <span class="val">manifests/production</span>
+  <span class="key">destination</span>:
+    <span class="key">server</span>: <span class="val">https://kubernetes.default.svc</span>
+    <span class="key">namespace</span>: <span class="val">production</span>
+  <span class="key">syncPolicy</span>:
+    <span class="key">automated</span>:
+      <span class="key">prune</span>: <span class="kw">true</span>
+      <span class="key">selfHeal</span>: <span class="kw">true</span>
+    <span class="key">syncOptions</span>:
+    - <span class="val">CreateNamespace=true</span></pre>
+          </div>
+
+          <h3>Estrategias de Despliegue</h3>
+          <table>
+            <tr><th>Estrategia</th><th>Downtime</th><th>Rollback</th><th>Costo</th></tr>
+            <tr><td><strong>Recreate</strong></td><td>Sí</td><td>Lento</td><td>Bajo</td></tr>
+            <tr><td><strong>Rolling Update</strong></td><td>No</td><td>Medio</td><td>Bajo</td></tr>
+            <tr><td><strong>Blue/Green</strong></td><td>No</td><td>Inmediato</td><td>Alto (2x recursos)</td></tr>
+            <tr><td><strong>Canary</strong></td><td>No</td><td>Rápido</td><td>Medio</td></tr>
+          </table>
+
+          <h3>Canary con Argo Rollouts</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">yaml</span><button class="code-copy" onclick="copyCode(this)">Copiar</button></div>
+            <pre><span class="key">apiVersion</span>: <span class="val">argoproj.io/v1alpha1</span>
+<span class="key">kind</span>: <span class="val">Rollout</span>
+<span class="key">metadata</span>:
+  <span class="key">name</span>: <span class="val">mi-app-rollout</span>
+<span class="key">spec</span>:
+  <span class="key">replicas</span>: <span class="num">10</span>
+  <span class="key">strategy</span>:
+    <span class="key">canary</span>:
+      <span class="key">steps</span>:
+      - <span class="key">setWeight</span>: <span class="num">10</span>    <span class="cm"># 10% del tráfico</span>
+      - <span class="key">pause</span>: {<span class="key">duration</span>: <span class="val">5m</span>}
+      - <span class="key">setWeight</span>: <span class="num">25</span>
+      - <span class="key">pause</span>: {<span class="key">duration</span>: <span class="val">10m</span>}
+      - <span class="key">setWeight</span>: <span class="num">50</span>
+      - <span class="key">pause</span>: {}        <span class="cm"># aprobación manual</span>
+      - <span class="key">setWeight</span>: <span class="num">100</span></pre>
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">🚀</span>
+            <span><strong>Best Practice:</strong> Combina ArgoCD (GitOps) + Argo Rollouts (despliegues progresivos) + Prometheus (métricas) para un pipeline de producción robusto con análisis automático de calidad.</span>
+          </div>
+        </div>
+
+      </div><!-- /lesson-area -->
+    </div>
+  </div>
+</section>
+
+<!-- RESOURCES -->
+<section class="section" id="recursos">
+  <div class="container">
+    <h2 class="section-title">Recursos Adicionales</h2>
+    <p class="section-sub">Herramientas y referencias para profundizar</p>
+    <div class="modules-grid">
+      <div class="module-card">
+        <div class="module-header">
+          <div class="module-icon" style="background:rgba(0,245,255,0.1)">📚</div>
+          <div class="module-info">
+            <h3>Documentación Oficial</h3>
+            <p>kubernetes.io — La fuente de verdad. Reference API, guides, tutoriales oficiales.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">kubernetes.io/docs</span>
+          <span class="topic-tag">API Reference</span>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-header">
+          <div class="module-icon" style="background:rgba(0,255,136,0.1)">🛠️</div>
+          <div class="module-info">
+            <h3>Herramientas Clave</h3>
+            <p>k9s, Lens, Helm, kustomize, kubectx/kubens para productividad diaria.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">k9s</span>
+          <span class="topic-tag">Lens IDE</span>
+          <span class="topic-tag">kustomize</span>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-header">
+          <div class="module-icon" style="background:rgba(183,0,255,0.1)">🎓</div>
+          <div class="module-info">
+            <h3>Certificaciones</h3>
+            <p>CKA, CKAD, CKS — Las certificaciones oficiales de Kubernetes de la CNCF.</p>
+          </div>
+        </div>
+        <div class="module-topics">
+          <span class="topic-tag">CKA</span>
+          <span class="topic-tag">CKAD</span>
+          <span class="topic-tag">CKS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>Curso de <span>Kubernetes</span> en Español · Diseñado para el aprendizaje profundo · 2024</p>
+    <p style="margin-top:8px; font-size:0.75rem; color:#3a4a6a;">Autor: <a href="mailto:wexjordan@gmail.com" style="color:var(--cyan);text-decoration:none;">wexjordan@gmail.com</a> · Powered by containerd</p>
+  </div>
+</footer>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+<script>
+// ─── CANVAS BACKGROUND ─────────────────────────────────────────────
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], lines = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.4;
+    this.vy = (Math.random() - 0.5) * 0.4;
+    this.r = Math.random() * 1.5 + 0.5;
+    this.alpha = Math.random() * 0.5 + 0.1;
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,245,255,${this.alpha})`;
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+function drawGrid() {
+  ctx.strokeStyle = 'rgba(0,80,255,0.04)';
+  ctx.lineWidth = 1;
+  const step = 60;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+}
+
+function connectParticles() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i+1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 100) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0,245,255,${0.08*(1-d/100)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate() {
+  ctx.clearRect(0,0,W,H);
+  drawGrid();
+  particles.forEach(p => { p.update(); p.draw(); });
+  connectParticles();
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ─── SCROLL SPY ─────────────────────────────────────────────────────
+const sections = document.querySelectorAll('.lesson-block');
+const navLinks = document.querySelectorAll('.sidebar ul li a');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`#nav-${e.target.id}`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+// ─── SCROLL TOP ──────────────────────────────────────────────────────
+const scrollTopBtn = document.getElementById('scrollTop');
+window.addEventListener('scroll', () => {
+  scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+});
+
+// ─── COPY CODE ───────────────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    btn.style.color = '#00ff88';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  });
+}
+
+// ─── SCROLL TO LESSON ────────────────────────────────────────────────
+function scrollToLesson(id) {
+  const el = document.getElementById(id);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+// ─── PROGRESS ANIMATION ──────────────────────────────────────────────
+const fills = document.querySelectorAll('.progress-fill');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.width = e.target.dataset.w;
+      io.unobserve(e.target);
+    }
+  });
+});
+fills.forEach(f => {
+  f.style.width = '0';
+  io.observe(f);
+});
+</script>
+</body>
+</html>
